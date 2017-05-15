@@ -76,11 +76,20 @@ void mainInit(void)
 static void thread_led(void const *argument)
 {
   (void) argument;
+  uint16_t color = 0;
 
+
+  lcdFillRect(0, 0, 100, 100, _RED);
+  lcdDrawFrame();
 
   for (;;)
   {
     ledToggle(0);
-    osDelay(250);
+    osDelay(10);
+    uartPrintf(_DEF_UART1, "test\n");
+
+    lcdFillRect(0, 0, 100, 100, color);
+    lcdDrawFrame();
+    color += 50;
   }
 }

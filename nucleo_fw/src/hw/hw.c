@@ -22,6 +22,8 @@ void hwInit(void)
   uartInit();
   buttonInit();
   flashInit();
+  spiInit();
+  lcdInit();
 
   // 1ms for swtimer
   //

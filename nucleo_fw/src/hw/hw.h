@@ -30,6 +30,9 @@
 #include "core/swtimer.h"
 #include "core/button.h"
 #include "core/flash.h"
+#include "core/spi.h"
+#include "lcd/lcd.h"
+
 
 
 void hwInit(void);

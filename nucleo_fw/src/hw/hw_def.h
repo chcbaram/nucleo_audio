@@ -15,6 +15,10 @@
 
 
 
+#define _USE_HW_LCD
+#define _USE_HW_ST7735
+
+
 
 #define _HW_DEF_SWTIMER_CH                _DEF_TIMER2
 

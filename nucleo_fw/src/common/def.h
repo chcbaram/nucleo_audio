@@ -46,6 +46,12 @@
 #define _DEF_TIMER3         2
 #define _DEF_TIMER4         3
 
+#define _DEF_SPI1           0
+#define _DEF_SPI2           1
+#define _DEF_SPI3           2
+#define _DEF_SPI4           3
+
+
 
 #define _DEF_INPUT          0
 #define _DEF_OUPUT          1
