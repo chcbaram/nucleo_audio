@@ -20,14 +20,14 @@
 
 
 
-#define _HW_DEF_SWTIMER_CH                _DEF_TIMER2
+#define _HW_DEF_SWTIMER_CH                _DEF_TIMER1
 
 
 
 #define _HW_DEF_UART_CH_MAX               2
 #define _HW_DEF_SW_TIMER_MAX              8
 #define _HW_DEF_CMDIF_LIST_MAX            16
-#define _HW_DEF_TIMER_CH_MAX              2
+#define _HW_DEF_TIMER_CH_MAX              1
 
 
 

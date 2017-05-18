@@ -10,9 +10,23 @@
 #ifdef _USE_HW_ST7735
 
 
+
+#define _TFTWIDTH   128
+#define _TFTHEIGHT  128
+
+
 #define _PIN_DEF_DC     0
 #define _PIN_DEF_CS     1
 #define _PIN_DEF_RST    2
+
+
+#define MADCTL_MY  0x80
+#define MADCTL_MX  0x40
+#define MADCTL_MV  0x20
+#define MADCTL_ML  0x10
+#define MADCTL_RGB 0x00
+#define MADCTL_BGR 0x08
+#define MADCTL_MH  0x04
 
 
 uint32_t colstart = 3;
@@ -326,6 +340,48 @@ void st7735InitRegs(const uint8_t *addr)
 
 }
 
+uint16_t st7735GetWidth(void)
+{
+  return _width;
+}
+
+uint16_t st7735GetHeight(void)
+{
+  return _height;
+}
+
+void st7735SetRotation(uint8_t mode)
+{
+  st7735WriteCommand(ST7735_MADCTL);
+
+
+  switch (mode)
+  {
+   case 0:
+     st7735WriteData(MADCTL_MX | MADCTL_MY | MADCTL_BGR);
+     _width  = _TFTWIDTH;
+     _height = _TFTHEIGHT;
+     break;
+
+   case 1:
+     st7735WriteData(MADCTL_MY | MADCTL_MV | MADCTL_BGR);
+     _width  = _TFTHEIGHT;
+     _height = _TFTWIDTH;
+     break;
+
+  case 2:
+    st7735WriteData(MADCTL_BGR);
+    _width  = _TFTWIDTH;
+    _height = _TFTHEIGHT;
+    break;
+
+   case 3:
+     st7735WriteData(MADCTL_MX | MADCTL_MV | MADCTL_BGR);
+     _width  = _TFTHEIGHT;
+     _height = _TFTWIDTH;
+     break;
+  }
+}
 void st7735SetAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 {
   st7735WriteCommand(ST7735_CASET); // Column addr set

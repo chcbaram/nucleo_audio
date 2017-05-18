@@ -24,6 +24,7 @@ void hwInit(void)
   flashInit();
   spiInit();
   lcdInit();
+  dacInit();
 
   // 1ms for swtimer
   //

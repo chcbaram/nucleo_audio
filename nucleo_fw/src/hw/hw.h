@@ -32,7 +32,7 @@
 #include "core/flash.h"
 #include "core/spi.h"
 #include "lcd/lcd.h"
-
+#include "core/dac.h"
 
 
 void hwInit(void);

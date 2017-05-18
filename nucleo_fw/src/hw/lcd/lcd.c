@@ -22,6 +22,7 @@ void lcdInit(void)
 
   st7735Init();
 
+  lcdSetRotation(1);
 
   cmdifAdd("lcd", lcdCmdif);
 }
@@ -31,11 +32,20 @@ void lcdFillRect(int16_t x, int16_t y, int16_t w, int16_t h,  uint16_t color)
   st7735FillRect(x, y, w, h, color);
 }
 
+void lcdFillScreen(uint16_t color)
+{
+  st7735FillRect(0, 0,  st7735GetWidth(), st7735GetHeight(), color);
+}
+
 void lcdDrawFrame(void)
 {
   st7735DrawFrame(true);
 }
 
+void lcdSetRotation(uint8_t mode)
+{
+  st7735SetRotation(mode);
+}
 
 
 

@@ -109,7 +109,10 @@ void st7735Init();
 
 void st7735FillRect(int16_t x, int16_t y, int16_t w, int16_t h,  uint16_t color);
 void st7735DrawFrame(bool wait);
+void st7735SetRotation(uint8_t mode);
 
+uint16_t st7735GetWidth(void);
+uint16_t st7735GetHeight(void);
 
 #endif
 

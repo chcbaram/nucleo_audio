@@ -67,7 +67,7 @@ bool hwtimerInit(void)
   timer_tbl[tim_ch].hTIM.Init.CounterMode       = TIM_COUNTERMODE_UP;
   timer_tbl[tim_ch].hTIM.Init.RepetitionCounter = 0;
 
-
+/*
   //-- TIM6
   //
   tim_ch = _DEF_TIMER2;
@@ -80,7 +80,7 @@ bool hwtimerInit(void)
   timer_tbl[tim_ch].hTIM.Init.ClockDivision     = 0;
   timer_tbl[tim_ch].hTIM.Init.CounterMode       = TIM_COUNTERMODE_UP;
   timer_tbl[tim_ch].hTIM.Init.RepetitionCounter = 0;
-
+*/
 
 
   for( i=0; i<_HW_DEF_TIMER_CH_MAX; i++ )
@@ -196,9 +196,6 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
   if( htim->Instance == TIM6 )
   {
     __HAL_RCC_TIM6_CLK_ENABLE();
-
-    HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 10, 0);
-    HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
   }
 }
 
@@ -210,7 +207,8 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef *htim)
   }
   if( htim->Instance == TIM6 )
   {
-    HAL_NVIC_DisableIRQ(TIM6_DAC_IRQn);
+    __HAL_RCC_TIM6_FORCE_RESET();
+    __HAL_RCC_TIM6_RELEASE_RESET();
   }
 }
 
