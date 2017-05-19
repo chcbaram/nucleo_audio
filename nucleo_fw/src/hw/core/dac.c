@@ -9,8 +9,14 @@
 
 
 
+#define DAC_BUFFER_MAX      (1024*2)
+
+
+
+
 
 DAC_HandleTypeDef       DacHandle;
+TIM_HandleTypeDef       htim;
 
 
 typedef struct
@@ -18,13 +24,13 @@ typedef struct
   DAC_ChannelConfTypeDef  sConfig;
   uint32_t                channel;
   uint8_t                 resolution;
+  uint8_t                 buffer[DAC_BUFFER_MAX];
 } dac_t;
 
 
 
-//const uint8_t aEscalator8bit[6] = {0x0, 0x33, 0x66, 0x99, 0xCC, 0xFF};
-uint8_t dac_buffer[256];
-
+static ring_buf_t tx_buf;
+static uint32_t   dac_hz = 0;
 
 static dac_t dac_tbl[DAC_CH_MAX];
 
@@ -38,19 +44,34 @@ void dacInitTimer(uint32_t hz);
 void dacInit(void)
 {
   uint32_t i;
+  uint32_t j;
 
 
   cmdifAdd("dac", dacCmdif);
 
-
-  for (i=0; i<256; i++)
+  for (i=0; i<DAC_CH_MAX; i++)
   {
-    dac_buffer[i] = i;
+    for (j=0; j<DAC_BUFFER_MAX; j++)
+    {
+      dac_tbl[i].buffer[j] = 0;
+    }
   }
 
+  tx_buf.ptr_in  = 0;
+  tx_buf.ptr_out = 0;
+  tx_buf.p_buf   = (uint8_t *)dac_tbl[0].buffer;
+  tx_buf.length  = DAC_BUFFER_MAX;
+
+}
 
 
+void dacSetup(uint32_t hz)
+{
+  dac_hz = hz;
+}
 
+void dacStart(void)
+{
   DacHandle.Instance = DAC1;
 
   HAL_DAC_Init(&DacHandle);
@@ -58,12 +79,13 @@ void dacInit(void)
   dac_tbl[0].channel    = DAC_CHANNEL_1;
   dac_tbl[0].resolution = 8;
 
+
   dac_tbl[0].sConfig.DAC_Trigger      = DAC_TRIGGER_T6_TRGO;
   dac_tbl[0].sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
 
   HAL_DAC_ConfigChannel(&DacHandle, &dac_tbl[0].sConfig, dac_tbl[0].channel);
 
-  HAL_DAC_Start_DMA(&DacHandle, dac_tbl[0].channel, (uint32_t *)dac_buffer, 100, DAC_ALIGN_8B_R);
+  HAL_DAC_Start_DMA(&DacHandle, dac_tbl[0].channel, (uint32_t *)dac_tbl[0].buffer, DAC_BUFFER_MAX, DAC_ALIGN_8B_R);
 
 
 
@@ -75,16 +97,23 @@ void dacInit(void)
 
   HAL_DAC_ConfigChannel(&DacHandle, &dac_tbl[1].sConfig, dac_tbl[1].channel);
 
-  HAL_DAC_Start_DMA(&DacHandle, dac_tbl[1].channel, (uint32_t *)dac_buffer, 100, DAC_ALIGN_8B_R);
+  HAL_DAC_Start_DMA(&DacHandle, dac_tbl[1].channel, (uint32_t *)dac_tbl[1].buffer, DAC_BUFFER_MAX, DAC_ALIGN_8B_R);
 
 
-  dacInitTimer(100000);
+  dacInitTimer(dac_hz);
 }
 
+void dacStop(void)
+{
+  //HAL_TIM_Base_Stop(&htim);
+  HAL_DAC_DeInit(&DacHandle);
+
+  tx_buf.ptr_in  = (tx_buf.length - 1) - DacHandle.DMA_Handle1->Instance->CNDTR;;
+  tx_buf.ptr_out = (tx_buf.length - 1) - DacHandle.DMA_Handle1->Instance->CNDTR;;
+}
 
 void dacInitTimer(uint32_t hz)
 {
-  static TIM_HandleTypeDef  htim;
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim.Instance = TIM6;
@@ -105,6 +134,50 @@ void dacInitTimer(uint32_t hz)
   HAL_TIM_Base_Start(&htim);
 }
 
+uint32_t dacAvailable(void)
+{
+  uint32_t length = 0;
+
+
+  tx_buf.ptr_in = (tx_buf.length - 1) - DacHandle.DMA_Handle1->Instance->CNDTR;
+
+  //*
+  length = ((tx_buf.length + tx_buf.ptr_out) - tx_buf.ptr_in) % tx_buf.length;
+  //*/
+  length = tx_buf.length - 1 - length;
+  //length = DacHandle.DMA_Handle1->Instance->CNDTR;
+
+  return length;
+}
+
+uint32_t dacGetDebug(void)
+{
+  return DacHandle.DMA_Handle1->Instance->CNDTR;
+}
+
+void dacPutch(uint8_t data)
+{
+  uint32_t index;
+  volatile uint32_t next_index;
+
+
+  index      = tx_buf.ptr_out;
+  next_index = tx_buf.ptr_out + 1;
+
+  tx_buf.p_buf[index] = data;
+  tx_buf.ptr_out      = next_index % tx_buf.length;
+}
+
+void dacWrite(uint8_t *p_data, uint32_t length)
+{
+  uint32_t i;
+
+
+  for (i=0; i<length; i++)
+  {
+    dacPutch(p_data[i]);
+  }
+}
 
 //-- dacCmdif
 //
@@ -151,7 +224,12 @@ int dacCmdif(int argc, char **argv)
   return 0;
 }
 
+volatile uint32_t dac_isr_count = 0;
 
+void HAL_DAC_ConvHalfCpltCallbackCh1(DAC_HandleTypeDef* hdac)
+{
+  dac_isr_count++;
+}
 
 void DMA1_Channel3_IRQHandler(void)
 {

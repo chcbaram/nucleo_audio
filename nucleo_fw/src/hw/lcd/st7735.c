@@ -48,12 +48,13 @@ static st7735_pin_t pin_tbl[3] =
   };
 
 
-static uint16_t _width  = 128;
-static uint16_t _height = 128;
+static uint16_t _width  = 96;
+static uint16_t _height = 96;
 
 
 
-uint16_t frame_buf[128*128];
+//uint16_t frame_buf[128*128];
+uint16_t frame_buf[96*96];
 
 
 // Rather than a bazillion writecommand() and writedata() calls, screen
